@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <environment include="Development">
+        <link href="~/lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+        <script src="~/lib/jquery/jquery.js"></script>
+        <script src="~/lib/bootstrap/js/bootstrap.js" ></script>
+    </environment>
+
+    <environment exclude="Development">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+            crossorigin="anonymous"
+            asp-fallback-href="~/lib/bootstrap/css/bootstrap.min.css" 
+            asp-fallback-test-class="sr-only"   
+            asp-fallback-test-property="position"
+            asp-fallback-test-value="absolute"
+            asp-suppress-fallback-integrity="true"
+            >
+    </environment>
+    <link href="~/css/Site.css" rel="stylesheet" asp-append-version="true"/>
+    <title>@ViewBag.Title</title>
+</head>
+
+<body>
+    @*<nav class="navbar navbar-expand-sm">
+        <div class="container-fluid">
+            <ul class="navbar-nav">
+                <li class="navbar-item">
+                    <a asp-action="index" asp-controller="home" class="nav-link"> List</a>
+                </li>
+                <li class="navbar-item">
+                    <a asp-action="create" asp-controller="home" class="nav-link">Create</a>
+                </li>
+            </ul>
+        </div>
+    </nav>*@
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-action="index" asp-controller="home">
+                    <img src="~/images/employee.png" height="30" width="30" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav">
+                        <li class="navbar-item">
+                            <a asp-action="index" asp-controller="home" class="nav-link"> List</a>
+                        </li>
+                        <li class="navbar-item">
+                            <a asp-action="create" asp-controller="home" class="nav-link">Create</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="navbar-item">
+                            <a asp-action="register" asp-controller="account" class="nav-link">Register</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            @RenderBody()
+        </div>
+        @{ if (IsSectionDefined("Scripts"))
+            {
+                @RenderSection("Scripts", required: true)
+
+            }
+        }
+    </div>
+</body>
+</html>

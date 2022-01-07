@@ -1,0 +1,43 @@
+﻿@model HomeDetailsViewModel;
+
+@{
+    Layout = "~/Views/shared/_Layout.cshtml";
+    ViewBag.Title = "Employee Details";
+    
+}
+@if(Model != null)
+{
+   
+     var Photopath = "~/images/" + (Model.Employee.PhotoPath ?? "car.jpg");
+   
+    <div class="row justify-content-center">
+    <div class="col-sm-8">
+        <div class="card">
+            <div class="card-header">
+                <h1>    @Model.Employee.Name</h1>
+            </div>
+
+
+            <div class="card-body text-center">
+                <img src="@Photopath" class="card-img-top" asp-append-version="true" alt="...">
+                <h4> Employee ID:   @Model.Employee.Id</h4>
+                <h4> Email:   @Model.Employee.Email</h4>
+                <h4> Department:   @Model.Employee.Department</h4>
+            </div>
+            <div class="card-footer text-center">
+                <a asp-controller="home" asp-action="index" class="btn btn-primary">View</a>
+                <a asp-controller="home" asp-action="Edit" asp-route-id="@Model.Employee.Id" class="btn btn-primary">Edit</a>
+                <a href="#" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+    </div>
+}
+else
+{
+    <div><p>Not Found</p></div>
+}
+
+@section Scripts{
+    <script src="~/js/CustomScript.js"></script>
+}

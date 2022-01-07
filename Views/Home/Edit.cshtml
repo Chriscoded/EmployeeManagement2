@@ -1,0 +1,83 @@
+﻿@model EmployeeEditViewModel
+
+@{
+    ViewBag.Title = "Edit Employee";
+    var Photopath = "";
+    if(Model != null)
+    {
+          Photopath = "~/images/" + (Model.ExistingPhotoPath ?? "car.jpg");
+    }
+  
+}
+
+<form enctype="multipart/form-data" asp-controller="Home" asp-action="Edit" method="post" class="mt-3">
+    <input asp-for="Id" hidden />
+    <input asp-for="ExistingPhotoPath" hidden />
+    <div class="form-group row m-2">
+        <label asp-for="Name" class="col-sm-2 col-form-label"></label>
+        <div class="col-sm-10">
+            <input asp-for="Name" class="form-control" placeholder="Name" />
+            <span asp-validation-for="Name" class="text-danger" value="@Model.Name"></span>
+        </div>
+    </div>
+    <div class="form-group row m-2">
+        <label asp-for="Email" class="col-sm-2 col-form-label"></label>
+        <div class="col-sm-10">
+            <input asp-for="Email" class="form-control" value="@Model.Email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group row m-2">
+        <label asp-for="Department" class="col-sm-2 col-form-label"></label>
+        <div class="col-sm-10">
+            <select asp-for="Department" class="form-control mr-sm-2"
+                    asp-items="Html.GetEnumSelectList<Dept>()">
+                <option value="@Model.Department">@Model.Department</option>
+
+            </select>
+            <span asp-validation-for="Department" class="text-danger"></span>
+        </div>
+    </div>
+
+     <div class="form-group row m-2">
+        <label asp-for="Photos" class="col-sm-2 col-form-label"></label>
+        <div class="col-sm-10">
+            <div class="custom-file">
+                <input asp-for="Photos" multiple class="form-control custom-file-input" />
+                <label class="custom-file-label">Click here to change photos</label>
+            </div>
+        </div>
+    </div>
+    <div class="form-group row col-sm-4 offset-4">
+        <img class="imgThumbnail" src="@Photopath" asp-append-version="true"/>
+    </div>
+    <div asp-validation-summary="All" class="text-danger">  </div>
+
+    <div class="form-group row">
+        <div class="col-sm-10">
+            <button type="submit" class="btn btn-primary">
+                Update
+            </button>
+            <a class="btn btn-primary" asp-controller="home" asp-action="index">Cancel</a>
+        </div>
+    </div>
+@section Scripts{
+    <script>
+        $(document).ready(function (){
+            $(".custom-file-input").on("change", function(){
+                console.log($(this));
+                //var filename = $(this).val.split("\\").pop();
+                //$(this).next(".custom-file-label").html(filename);
+                var label = $(this).next(".custom-file-label");
+                var files = $(this)[0].files;
+                if(files.length > 1){
+                    label.html(files.length + " files was selected");
+                }
+                else if(files.length == 1){
+                    label.html(files[0].name);
+                }
+            });
+        });
+    </script>
+}
+</form>

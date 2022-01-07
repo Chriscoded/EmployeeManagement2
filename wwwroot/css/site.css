@@ -1,0 +1,11 @@
+﻿.btn {
+    width:75px;
+}
+.imgThumbnail{
+    height: 200px;
+    width: auto;
+}
+.card-custom {
+    width: 49.5%;
+    min-width: 18rem;
+}
