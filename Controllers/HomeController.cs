@@ -1,5 +1,6 @@
 ﻿using EmployeeManagement.Models;
 using EmployeeManagement.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -52,18 +53,20 @@ namespace EmployeeManagement.Controllers
                     PageTitle = "Employee Details"
                 };
                 //Employee model = _employeeRepository.GetEmployee(3);
-                ViewBag.PageTitle = "Employee Details";
+                //ViewBag.PageTitle = "Employee Details";
 
                 return View(homeDetailsViewModel);
             }
         }
 
         [HttpGet]
+        [Authorize]
         public ViewResult Create()
         {
             return View();
         }
         [HttpPost]
+        [Authorize]
         public IActionResult Create(EmployeeCreateViewModel model)
         {
             if (ModelState.IsValid)
@@ -84,6 +87,7 @@ namespace EmployeeManagement.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public ViewResult Edit(int id)
         {
             Employee Employee = _employeeRepository.GetEmployee(id);
@@ -101,6 +105,7 @@ namespace EmployeeManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult Edit(EmployeeEditViewModel model)
         {
 

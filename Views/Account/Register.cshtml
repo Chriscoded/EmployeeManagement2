@@ -1,6 +1,4 @@
-﻿@using EmployeeManagement2.ViewModel
-
-@model RegisterViewModel
+﻿@model RegisterViewModel
 
 @{
     ViewBag.Title = "User Registration";
@@ -19,13 +17,18 @@
             </div>
             <div class="form-group">
                 <label asp-for="Password"></label>
-                <input asp-for="Password" class="form-control" />
+                <input type="password" asp-for="Password" class="form-control" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="ConfirmPassword"></label>
                 <input asp-for="ConfirmPassword" class="form-control" />
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="City"></label>
+                <input asp-for="City" class="form-control" />
             </div>
 
             <button type="submit" class="btn btn-primary">Register</button>

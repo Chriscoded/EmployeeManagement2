@@ -31,7 +31,7 @@ namespace EmployeeManagement.Controllers
             return View("NotFound");  
         }
 
-        [Route("Error")]
+        [Route("CustomError")]
         [AllowAnonymous]
         public IActionResult Error()
         {

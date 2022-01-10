@@ -11,7 +11,7 @@ namespace EmployeeManagement.Models
     {       
         public int Id { get; set; }
         [Required]
-        [MaxLength(50, ErrorMessage = "Name can not exceeed 10 characters")]
+        [MaxLength(50, ErrorMessage = "Name can not exceeed 50 characters")]
         public string Name { get; set; }
         [Required]
         [RegularExpression(@"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", ErrorMessage = "Invalid Email")]
