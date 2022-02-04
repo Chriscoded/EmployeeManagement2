@@ -77,7 +77,7 @@ namespace EmployeeManagement2.Controllers
                     ViewBag.ErrorTitle = $"Registration successful";
                     ViewBag.ErrorMessage = $"Before you can login please confirm your Email," +
                         "By clicking on the confirmation link that we have emailed you";
-                    return View("Error");    
+                    return View("Success");    
                 }
                 foreach(var error in result.Errors)
                 {
