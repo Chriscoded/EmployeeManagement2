@@ -1,11 +1,11 @@
-﻿@model IEnumerable<Employee> 
+﻿@using EmployeeManagement2.Models
+@model IEnumerable<Employee> 
 
 @{ 
     Layout = "~/Views/shared/_Layout.cshtml";
     ViewBag.Title = "Employee Lists";
 }
             <div class="card-group">
-               
                 @foreach (var employee in Model)
                 {
                     var Photopath = "~/images/" + (employee.PhotoPath ?? "car.jpg");

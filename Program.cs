@@ -1,10 +1,12 @@
-using EmployeeManagement.Models;
+
 using EmployeeManagement2.Models;
+using EmployeeManagement2.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using NLog.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -18,13 +20,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 10;
     options.Password.RequireNonAlphanumeric = false;
-}).AddEntityFrameworkStores<AppDbContext>();
+    //options.SignIn.RequireConfirmedEmail = true;
+}).AddEntityFrameworkStores<AppDbContext>()
+/*.AddDefaultTokenProviders()*/;
 
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.Password.RequiredLength = 10;
-    options.Password.RequireNonAlphanumeric = false;
-});
+//builder.Services.Configure<IdentityOptions>(options =>
+//{
+//    options.Password.RequiredLength = 10;
+//    options.Password.RequireNonAlphanumeric = false;
+//});
 
 builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 
@@ -39,9 +43,71 @@ builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 
 //} ).AddXmlSerializerFormatters();
 
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+        {
+            options.ClientId = "568069082839-qpthkhoinpanf0v204771914i94urbgc.apps.googleusercontent.com";
+            options.ClientSecret = "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";
+            options.CallbackPath = new PathString("/signin-google");
+        })
+    .AddFacebook(options =>
+    {
+        options.AppId = "1038041526752527";
+        options.AppSecret = "47e5d25b3834b9cd8a3f7b80879dd0df";
+    });
+
 builder.Services.AddOptions();
 builder.Services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
+
+builder.Services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
+//builder.Services.AddHttpContextAccessor();
 //builder.Services.AddRazorPages();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DeleteRolePolicy",
+       //policy => policy.RequireClaim("Delete Role", "true"));
+       policy => policy.RequireAssertion(context =>
+       context.User.HasClaim(claim => claim.Type == "Delete role" && claim.Value == "true") ||
+       context.User.IsInRole("Super Admin")
+       ));
+
+    options.AddPolicy("EditRolePolicy",
+        policy => policy.RequireAssertion(context =>
+        context.User.HasClaim(claim => claim.Type == "Create Role" && claim.Value == "true") ||
+        context.User.IsInRole("Super Admin")
+        ));
+
+    options.AddPolicy("EditingAdminNotSameWithEditedPolicy",
+        policy => policy.AddRequirements(new ManageAdminRolesAndClaimsRequirements()));
+
+    options.AddPolicy("CreateRolePolicy",
+        policy => policy.RequireAssertion(context =>
+        context.User.HasClaim(claim => claim.Type == "Create Role" && claim.Value == "true") ||
+        context.User.IsInRole("Super Admin")
+        ));
+
+    options.AddPolicy("AdminRolePolicy",
+        policy => policy.RequireAssertion(context =>
+        context.User.IsInRole("Admin") ||
+        context.User.IsInRole("Super Admin")
+        ));
+
+
+    options.AddPolicy("EditUserPolicy",
+       policy => policy.RequireAssertion(context =>
+       context.User.HasClaim(claim => claim.Type == "Edit User" && claim.Value == "true") ||
+       context.User.IsInRole("Super Admin")
+       ));
+
+    options.AddPolicy("DeleteUserPolicy",
+       policy => policy.RequireAssertion(context =>
+       context.User.HasClaim(claim => claim.Type == "Delete User" && claim.Value == "true") ||
+       context.User.IsInRole("Super Admin")
+       ));
+});
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

@@ -4,6 +4,6 @@ namespace EmployeeManagement2.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        public String City { get; set; }
+        public String ? City { get; set; }
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace EmployeeManagement.Controllers
+namespace EmployeeManagement2.Controllers
 {
     public class ErrorController : Controller
     {

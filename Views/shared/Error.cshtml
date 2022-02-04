@@ -1,9 +1,17 @@
-﻿<h3>
-    An error occured while processing your request, support team has been notified we're working tirellessly to fix it
-</h3>
+﻿@if (ViewBag.ErrorTitle == null)
+{
+    <h3>
+        An error occured while processing your request, support team has been notified we're working tirellessly to fix it
+    </h3>
 <h5>
     Please Contact us at amaemechris@gmail.com for support
-</h5>
+    </h5>
+}
+else
+{
+    <h1 class="text-danger">@ViewBag.ErrorTitle</h1>
+    <h6 class="text-danger">@ViewBag.ErrorMessage</h6>
+}
 <hr/>
 @*<h3>Eception Details:</h3>
 <div class= "alert alert-danger">

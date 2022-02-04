@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace EmployeeManagement.Migrations
+namespace EmployeeManagement2.Migrations
 {
     public partial class SeedEmployeeTable : Migration
     {

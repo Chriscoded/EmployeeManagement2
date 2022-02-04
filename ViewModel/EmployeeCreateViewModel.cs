@@ -1,9 +1,10 @@
 ﻿//this model is serving like artificial model just for processing amd at the end it will be transfered to Employee model
 // that is the model serve as middle man the arm is to ensure that our images are properly processed
-using EmployeeManagement.Models;
+
+using EmployeeManagement2.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace EmployeeManagement.ViewModel
+namespace EmployeeManagement2.ViewModel
 {
     public class EmployeeCreateViewModel
     {

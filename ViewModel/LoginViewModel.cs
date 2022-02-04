@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Authentication;
+using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeManagement2.ViewModel
 {
@@ -12,5 +13,7 @@ namespace EmployeeManagement2.ViewModel
         public string Password { get; set; }
         [Display(Name ="Remember Me")]
         public bool RememberMe { get; set; }
+        public string? ReturnUrl { get; set; }
+        public IList<AuthenticationScheme>? ExternalLogins  { get; set; }
     }
 }

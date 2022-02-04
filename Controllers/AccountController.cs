@@ -3,6 +3,7 @@ using EmployeeManagement2.Models;
 using EmployeeManagement2.ViewModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EmployeeManagement2.Controllers
 {
@@ -10,11 +11,14 @@ namespace EmployeeManagement2.Controllers
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly ILogger<AccountController> logger;
 
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager, 
+            ILogger<AccountController> logger)
         {
             this.userManager = userManager;
             signInManager = SignInManager;
+            this.logger = logger;
         }
         [HttpPost]
         public async Task<IActionResult> Logout()
@@ -57,8 +61,23 @@ namespace EmployeeManagement2.Controllers
 
                 if (result.Succeeded)
                 {
-                    await signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "home");
+                    //generate confirmation token
+                    var token = userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var confirmationLink = Url.Action("ConfirmEmail", "Action",
+                        new { userId = user.Id, token = token }, Request.Scheme);
+
+                    logger.Log(LogLevel.Warning, confirmationLink);
+
+                    //if user is admin adding new user that is the admin is logged in redirect to listuser action in account countroller
+                    if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                    {
+                        return RedirectToAction("ListUsers", "Administration");
+                    }
+
+                    ViewBag.ErrorTitle = $"Registration successful";
+                    ViewBag.ErrorMessage = $"Before you can login please confirm your Email," +
+                        "By clicking on the confirmation link that we have emailed you";
+                    return View("Error");    
                 }
                 foreach(var error in result.Errors)
                 {
@@ -69,16 +88,29 @@ namespace EmployeeManagement2.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public async Task<IActionResult> Login(string? returnUrl)
         {
-            return View();
+            LoginViewModel Model = new LoginViewModel()
+            {
+                ReturnUrl = returnUrl,
+                ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+            };
+            return View(Model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel Model, string? ReturnUrl)
         {
+            Model.ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                var user = await userManager.FindByEmailAsync(Model.Email);
+                //check if email is confirmed
+                if (user != null && !user.EmailConfirmed && (await userManager.CheckPasswordAsync(user, Model.Password)))
+                {
+                    ModelState.AddModelError(String.Empty, $"Email not varified yet");
+                    return View(Model);
+                }
                 var result = await signInManager.PasswordSignInAsync(Model.Email, Model.Password, Model.RememberMe, false);
 
                 if (result.Succeeded)
@@ -102,6 +134,100 @@ namespace EmployeeManagement2.Controllers
             }
             return View(Model);
         }
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ExternalLogin(string provider, string returnUrl)
+        {
+            //upon successfull authentication send the user back to ExternalLoginCallback action in account controller
+            var redirectUrl = Url.Action("ExternalLoginCallback", "Account",
+                new { ReturnUrl = returnUrl });
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);    
+        }
+
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
+        {
+            //if return url is null initialize it to application root url
+            returnUrl = returnUrl ?? Url.Content("~/");
+            //lets add values to LoginViewModel incase  external authentication fails we want to 
+            //reload login view with return url and externalLogin details that it rquires
+            LoginViewModel loginViewModel = new LoginViewModel
+            {
+                ReturnUrl = returnUrl,
+                ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+            };
+
+            if (remoteError != null)
+            {
+                ModelState.AddModelError(string.Empty, $"Error from external provider: {remoteError}");
+                return View("Login", loginViewModel);
+            }
+
+            //get login info sent by externalProvider
+
+            var info = await  signInManager.GetExternalLoginInfoAsync();   
+
+            if(info == null)
+            {
+                ModelState.AddModelError(string.Empty, $"Error loading external login information: {remoteError}");
+                return View("Login", loginViewModel);
+            }
+
+            var Email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            ApplicationUser user = null;
+
+            if(Email != null)
+            {
+                user = await userManager.FindByEmailAsync(Email);
+                //check if email is confirmed
+                if(user.Email != null && !user.EmailConfirmed)
+                {
+                    ModelState.AddModelError(string.Empty, $"Email not confirmed yet");
+                    return View("Login", loginViewModel);
+                }  
+            }   
+            var signInResult = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (signInResult.Succeeded)
+            {
+                return LocalRedirect(returnUrl);
+            }
+            // if signinResult did not succeed lets check if the external user has local account in
+            //in our system using email from info.Principal.FindFirst(ClaimTypes.Email);
+            //to get the user details
+            else
+            {
+                if (Email != null)
+                {
+                    //if the user is not already existing in our local account
+                    //then add the user to our local account
+                    if (user == null)
+                    {
+                        user = new ApplicationUser
+                        {
+                            UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
+                            Email = info.Principal.FindFirstValue(ClaimTypes.Email),
+                        };
+                        //adds user to are local database
+                        await userManager.CreateAsync(user);
+                    }
+                    //Adds external user logi info to the user
+                    await userManager.AddLoginAsync(user, info);
+                    //sign uswr in
+                    await signInManager.SignInAsync(user, isPersistent: false);
+
+                    return LocalRedirect(returnUrl);
+                }
+                ViewBag.ErrorTitle = $"Email Claim not received from {info.LoginProvider}";
+                ViewBag.ErrorMessage = $"Please contact support on amaemechris@gmail.com";
+                return View("Error");
+            }
+        }
+
     }
-    
+
 }

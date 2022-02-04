@@ -1,4 +1,4 @@
-﻿namespace EmployeeManagement.Models
+﻿namespace EmployeeManagement2.Models
 {
     //public class ModelBuilderExtensions
     //{

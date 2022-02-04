@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<IdentityRole>
+@using Microsoft.AspNetCore.Authorization;
+@inject IAuthorizationService authorizationService;
 
     @{
         ViewBag.Title = "List Roles";
@@ -19,9 +21,32 @@
           <div class="card-body">
         
             <h6 class="card-title mb-3">@role.Name</h6>
-            <a asp-controller="Administration" asp-action="EditRole" 
-                asp-route-id="@role.Id" class="btn btn-primary">Edit</a>
-            <a  class="btn btn-danger">Delete</a>
+            <form asp-action="DeleteRole" asp-route-Id="@role.Id" method="post">
+                @*if user has Edit Role claim*@
+                    @if((await authorizationService.AuthorizeAsync(User, "EditRolePolicy")).Succeeded)
+                    {
+                       <a asp-controller="Administration" asp-action="EditRole" 
+                    asp-route-id="@role.Id" class="btn btn-primary">Edit</a>
+                    }
+
+                    @*if user has Delete Role claim*@
+                    @if ((await authorizationService.AuthorizeAsync(User, "DeleteRolePolicy")).Succeeded)
+                    {
+                        <span class="confirmDeleteSpan" id="confirmDeleteSpan_@role.Id" style="display:none">
+                            <span>Are you sure you want to delete?</span>
+                            <button type="submit" class="btn btn-danger">Yes</button>
+                            <a href="#" class="btn btn-primary" onclick="confirmDelete('@role.Id', false)">No</a>
+                        </span>
+                        <span id="deleteSpan_@role.Id">
+                            <a href="#" class="btn btn-danger" onclick="confirmDelete('@role.Id', true)">Delete </a>
+                        </span>
+                    }
+
+               @* <button type="submit" class="btn btn-danger"
+                onclick="return confirm('Are you sure you want to delet user: @role.Name')">
+                Delete</button>*@
+            </form>
+
           </div>
         </div>   
         }
@@ -36,6 +61,11 @@
         <a class="btn btn-primary mb-3" style="width:auto" asp-controller="administration" asp-action="CreateRole">
             Creat Role
         </a>
-      </div>
+        
+       </div>
     </div>
+    }
+
+    @section Scripts {
+    <script src="~/js/CustomScript.js"></script>
     }

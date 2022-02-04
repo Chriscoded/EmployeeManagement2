@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EmployeeManagement.Models
+namespace EmployeeManagement2.Models
 {
     public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
@@ -19,26 +19,12 @@ namespace EmployeeManagement.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            //modelBuilder.Seed();
-            ////    modelBuilder.Entity<Employee>().HasData(
-            ////        new Employee()
-            ////        {
-            ////            Id = 1,
-            ////            Name = "Chris",
-            ////            Department = Dept.IT,
-            ////            Email = "amaeme5873@yahoo.com",
-            ////            PhotoPath = "car.jpg"
-            ////        },
 
-            ////        new Employee()
-            ////        {
-            ////            Id = 2,
-            ////            Name = "Christo",
-            ////            Department = Dept.HR,
-            ////            Email = "amaeme5873@yahoo.com",
-            ////            PhotoPath = "car.jpg"
-            ////        }
-            ////        );
+            foreach(var foreignKey in modelBuilder.Model.GetEntityTypes()
+                .SelectMany(e => e.GetForeignKeys()))
+            {
+                foreignKey.DeleteBehavior = DeleteBehavior.Restrict; 
+            }
         }
 
     }

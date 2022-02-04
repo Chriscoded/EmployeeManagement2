@@ -1,10 +1,10 @@
-﻿using EmployeeManagement.Models;
+﻿using EmployeeManagement2.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EmployeeManagement.ViewModel
+namespace EmployeeManagement2.ViewModel
 {
     public class HomeDetailsViewModel
     {

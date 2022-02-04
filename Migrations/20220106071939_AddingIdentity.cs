@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace EmployeeManagement.Migrations
+namespace EmployeeManagement2.Migrations
 {
     public partial class AddingIdentity : Migration
     {

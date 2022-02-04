@@ -1,10 +1,10 @@
-﻿using EmployeeManagement.Models;
-using EmployeeManagement.ViewModel;
+﻿using EmployeeManagement2.Models;
+using EmployeeManagement2.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace EmployeeManagement.Controllers
+namespace EmployeeManagement2.Controllers
 {
 
     public class HomeController : Controller

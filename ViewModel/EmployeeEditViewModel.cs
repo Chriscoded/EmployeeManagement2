@@ -1,7 +1,7 @@
-﻿using EmployeeManagement.Models;
+﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace EmployeeManagement.ViewModel
+namespace EmployeeManagement2.ViewModel
 {
     public class EmployeeEditViewModel : EmployeeCreateViewModel
     {
