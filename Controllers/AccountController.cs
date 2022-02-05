@@ -13,7 +13,7 @@ namespace EmployeeManagement2.Controllers
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly ILogger<AccountController> logger;
 
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager, 
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager,
             ILogger<AccountController> logger)
         {
             this.userManager = userManager;
@@ -26,7 +26,7 @@ namespace EmployeeManagement2.Controllers
             await signInManager.SignOutAsync();
             return RedirectToAction("Index", "home");
         }
-        
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -36,34 +36,34 @@ namespace EmployeeManagement2.Controllers
         [AcceptVerbs("Get", "Post")]
         public async Task<IActionResult> IsEmailInUse(string Email)
         {
-           var user =  await userManager.FindByEmailAsync(Email);
-            if(user == null)
+            var user = await userManager.FindByEmailAsync(Email);
+            if (user == null)
             {
                 return Json(true);
-            } 
+            }
             else
             {
-                return Json($"Email {Email} is already in use"); 
+                return Json($"Email {Email} is already in use");
             }
 
         }
-            [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel Model)
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { 
-                    UserName = Model.Email, 
+                var user = new ApplicationUser {
+                    UserName = Model.Email,
                     Email = Model.Email,
                     City = Model.City
                 };
-               var result = await userManager.CreateAsync(user, Model.Password);
+                var result = await userManager.CreateAsync(user, Model.Password);
 
                 if (result.Succeeded)
                 {
                     //generate confirmation token
-                    var token = userManager.GenerateEmailConfirmationTokenAsync(user);
-                    var confirmationLink = Url.Action("ConfirmEmail", "Action",
+                    var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var confirmationLink = Url.Action("ConfirmEmail", "Account",
                         new { userId = user.Id, token = token }, Request.Scheme);
 
                     logger.Log(LogLevel.Warning, confirmationLink);
@@ -77,14 +77,39 @@ namespace EmployeeManagement2.Controllers
                     ViewBag.ErrorTitle = $"Registration successful";
                     ViewBag.ErrorMessage = $"Before you can login please confirm your Email," +
                         "By clicking on the confirmation link that we have emailed you";
-                    return View("Success");    
+                    return View("Success");
                 }
-                foreach(var error in result.Errors)
+                foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
             return View(Model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if(userId == null || token == null)
+            {
+                return RedirectToAction("index", "home");
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+
+            if(userId == null)
+            {
+                ViewBag.ErrorMessage = $"The User ID {userId} is invalid";
+                 return View("NotFound");
+            }
+
+            var result = await userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                return View();
+            }
+            ViewBag.ErrorTitle = "Email cannot be confirmed";
+            return View("Error");
         }
 
         [HttpGet]
