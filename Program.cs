@@ -46,14 +46,14 @@ builder.Services.AddMvc(options => options.EnableEndpointRouting = false);
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
         {
-            options.ClientId = "568069082839-qpthkhoinpanf0v204771914i94urbgc.apps.googleusercontent.com";
-            options.ClientSecret = "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";
+            options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+            options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
             options.CallbackPath = new PathString("/signin-google");
         })
     .AddFacebook(options =>
     {
-        options.AppId = "1038041526752527";
-        options.AppSecret = "47e5d25b3834b9cd8a3f7b80879dd0df";
+        options.AppId = builder.Configuration["Authentication:Facebook:AppId"];
+        options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
     });
 
 builder.Services.AddOptions();
