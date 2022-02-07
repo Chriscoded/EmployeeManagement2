@@ -53,7 +53,7 @@ namespace EmployeeManagement2.Controllers
                     PageTitle = "Employee Details"
                 };
                 //Employee model = _employeeRepository.GetEmployee(3);
-                //ViewBag.PageTitle = "Employee Details";
+                ViewBag.Title = $"Employee Details";
 
                 return View(homeDetailsViewModel);
             }
@@ -63,6 +63,7 @@ namespace EmployeeManagement2.Controllers
         [Authorize]
         public ViewResult Create()
         {
+            ViewBag.Title = $"Register";
             return View();
         }
         [HttpPost]
@@ -100,6 +101,7 @@ namespace EmployeeManagement2.Controllers
                 Department = Employee.Department,
                 ExistingPhotoPath = Employee.PhotoPath
             };
+            ViewBag.Title = $"Edit";
             return View(editViewModel);
 
         }

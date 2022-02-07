@@ -63,6 +63,7 @@ namespace EmployeeManagement2.Controllers
                 {
                     //generate confirmation token
                     var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                    //generate email confirmation link
                     var confirmationLink = Url.Action("ConfirmEmail", "Account",
                         new { userId = user.Id, token = token }, Request.Scheme);
 
@@ -205,17 +206,23 @@ namespace EmployeeManagement2.Controllers
 
             var Email = info.Principal.FindFirstValue(ClaimTypes.Email);
             ApplicationUser user = null;
-
+            //if email has value
             if(Email != null)
             {
-                user = await userManager.FindByEmailAsync(Email);
-                //check if email is confirmed
-                if(user.Email != null && !user.EmailConfirmed)
-                {
-                    ModelState.AddModelError(string.Empty, $"Email not confirmed yet");
-                    return View("Login", loginViewModel);
-                }  
-            }   
+                user  = await userManager.FindByEmailAsync(Email);
+               
+                    //check if email is confirmed
+                    if (user != null && !user.EmailConfirmed)
+                    {
+                        ModelState.AddModelError(string.Empty, $"Email not confirmed yet");
+                        return View("Login", loginViewModel);
+                    }
+            }
+            //else
+            //{
+            //    ModelState.AddModelError(string.Empty, $"Log into {info.LoginProvider} using your Email to help us identify you");
+            //    return View("Login", loginViewModel);
+            //}
             var signInResult = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (signInResult.Succeeded)
             {
@@ -235,20 +242,39 @@ namespace EmployeeManagement2.Controllers
                         user = new ApplicationUser
                         {
                             UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
-                            Email = info.Principal.FindFirstValue(ClaimTypes.Email),
+                            Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                         };
                         //adds user to are local database
                         await userManager.CreateAsync(user);
+
+                        //generate confirmation token
+                        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                        //generate email confirmation link
+                        var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                            new { userId = user.Id, token = token }, Request.Scheme);
+
+                        logger.Log(LogLevel.Warning, confirmationLink);
+
+                        ViewBag.SuccessTitle = "Registration successful";
+                        ViewBag.SuccessMessage = "Before you can login please confirm your Email," +
+                            " By clicking on the confirmation link that we have emailed you";
+
+                        //Adds external user login info to the user when the user with the email is already existing
+                        await userManager.AddLoginAsync(user, info);
+                        //sign uswr in
+                        
+                        return View("Success");
+
                     }
-                    //Adds external user logi info to the user
+                    //Adds external user login info to the user
                     await userManager.AddLoginAsync(user, info);
                     //sign uswr in
                     await signInManager.SignInAsync(user, isPersistent: false);
 
                     return LocalRedirect(returnUrl);
                 }
-                ViewBag.ErrorTitle = $"Email Claim not received from {info.LoginProvider}";
-                ViewBag.ErrorMessage = $"Please contact support on amaemechris@gmail.com";
+                ViewBag.ErrorTitle = "Email Claim not received from {info.LoginProvider}";
+                ViewBag.ErrorMessage = "Please contact support on amaemechris@gmail.com";
                 return View("Error");
             }
         }
