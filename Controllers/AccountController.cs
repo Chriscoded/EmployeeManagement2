@@ -20,6 +20,81 @@ namespace EmployeeManagement2.Controllers
             signInManager = SignInManager;
             this.logger = logger;
         }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string Email, string token)
+        {
+            if(Email == null || token == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid Password reset token");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel Model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.FindByEmailAsync(Model.Email);
+
+                if(user != null)
+                {
+                    var result = await userManager.ResetPasswordAsync(user, Model.Token, Model.Password);
+                    if (result.Succeeded)
+                    {
+                        return View("ResetPasswordConfirmation");
+                    }
+                    foreach(var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return View(Model);
+                }
+                return View("ResetPasswordConfirmation");
+            }
+            return View(Model);
+        }
+
+            [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel Model)
+        {
+            ApplicationUser user = null;
+            //if input passed all necessary validatio 
+            if (ModelState.IsValid)
+            {
+                user = await userManager.FindByEmailAsync(Model.Email); 
+                
+                if(user != null && await userManager.IsEmailConfirmedAsync(user))
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                    var passwordResetLink = Url.Action("ResetPassword", "Account", new
+                    { email = Model.Email, token = token}, Request.Scheme);
+
+                    logger.Log(LogLevel.Warning, passwordResetLink);
+                    return View("ForgotPasswordConfirmation");
+                }
+                //when the user is not in our system lets not let them
+                //know that they are not in our system rather lets tell them
+                //that if they have account we've sent email using 
+                //ForgotPasswordConfirmation view
+                return View("ForgotPasswordConfirmation");
+            }
+            //when modelstate is not validate
+            else
+            {
+                ModelState.AddModelError(String.Empty, $"Please ensure your Email is correct, in correct format and case");
+                return View(Model);
+            }
+
+        }
+
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
