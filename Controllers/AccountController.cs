@@ -216,6 +216,8 @@ namespace EmployeeManagement2.Controllers
 
                 if (result.Succeeded)
                 {
+                    
+                    //if any return url
                     if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
                     {
                         return Redirect(ReturnUrl);

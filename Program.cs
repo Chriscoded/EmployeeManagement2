@@ -21,8 +21,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredLength = 10;
     options.Password.RequireNonAlphanumeric = false;
     options.SignIn.RequireConfirmedEmail = true;
+
+    //change email confirmation Token provider from default to custom
+    options.Tokens.EmailConfirmationTokenProvider = "CustomConfirmation";
 }).AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+//add custom email token provider
+.AddTokenProvider<CustomEmailConfirmationTokenProvider <ApplicationUser>>("CustomConfirmation");
 
 //builder.Services.Configure<IdentityOptions>(options =>
 //{
@@ -56,11 +61,18 @@ builder.Services.AddAuthentication()
         options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
     });
 
+//changing the life span of token generated to 5 hours
+builder.Services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(5));
+
+//changing the life span of just email confirmation token type to 3 days using CustomEmailConfirmationTokenProviderOptions, to 5 hours
+builder.Services.Configure<CustomEmailConfirmationTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromDays(3));
+
 builder.Services.AddOptions();
 builder.Services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
+builder.Services.AddSingleton<DataProtectionPurposeStrings>();
 //builder.Services.AddHttpContextAccessor();
 //builder.Services.AddRazorPages();
 

@@ -15,8 +15,8 @@
                             <h5 class="card-title">@employee.Name</h5>
                             <p class="card-text">@employee.Department</p>
                             <p class="card-text">@employee.Id</p>
-                            <a asp-controller="home" asp-action="details" asp-route-id="@employee.Id" class="btn btn-primary m-1">View</a>
-                            <a asp-controller="home" asp-action="Edit" asp-route-id="@employee.Id"class="btn btn-primary m-1">Edit</a>
+                            <a asp-controller="home" asp-action="details" asp-route-id="@employee.encryptedId" class="btn btn-primary m-1">View</a>
+                            <a asp-controller="home" asp-action="Edit" asp-route-id="@employee.encryptedId"class="btn btn-primary m-1">Edit</a>
                             <a asp-controller="home" asp-action="Delete" asp-route-id="@employee.Id" class="btn btn-danger m-1">Delete</a>
                         </div>
                     </div>

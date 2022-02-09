@@ -1,6 +1,8 @@
 ﻿using EmployeeManagement2.Models;
+using EmployeeManagement2.Security;
 using EmployeeManagement2.ViewModel;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -12,22 +14,32 @@ namespace EmployeeManagement2.Controllers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IWebHostEnvironment hostingEnvironment;
         private readonly ILogger logger;
+        private readonly IDataProtector protector;
 
-        public HomeController(IEmployeeRepository employeeRepository, IWebHostEnvironment hostingEnvironment, ILogger<HomeController> logger)
+        public HomeController(IEmployeeRepository employeeRepository, IWebHostEnvironment hostingEnvironment, 
+            ILogger<HomeController> logger, IDataProtectionProvider dataProtectionProvider, 
+            DataProtectionPurposeStrings dataProtectionPurposeStrings)
         { 
             _employeeRepository = employeeRepository;
             this.hostingEnvironment = hostingEnvironment;
             this.logger = logger;
-              
+            protector = dataProtectionProvider.CreateProtector(dataProtectionPurposeStrings.EmployeeIdRouteValue);
+
+
         }
 
         public ViewResult index()
         {
             //return _employeeRepository.GetEmployee(1).Name;
-            var model = _employeeRepository.GetAllEmployee();
+            var model = _employeeRepository.GetAllEmployee()
+                .Select(e =>
+                {
+                    e.encryptedId = protector.Protect(e.Id.ToString());
+                    return e;
+                });
             return View(model);
         }
-        public ViewResult Details(int? id)
+        public ViewResult Details(string? id)
         {
             //throw new Exception("Error in detail view");
 
@@ -37,12 +49,15 @@ namespace EmployeeManagement2.Controllers
             logger.LogWarning("Log Warning");
             logger.LogError("Log Error");
             logger.LogCritical("Log critical");
+
+            //decrypt encrypted id
+            int employeeId = Convert.ToInt32(protector.Unprotect(id));
             //get the particular employee using id
-            Employee employee = _employeeRepository.GetEmployee(id.Value);
+            Employee employee = _employeeRepository.GetEmployee(employeeId);
             if (employee == null)
             {
                 Response.StatusCode = 404;
-                return View("EmployeeNotFound", id.Value);
+                return View("EmployeeNotFound", employeeId);
             }
             else
             {
@@ -89,17 +104,23 @@ namespace EmployeeManagement2.Controllers
 
         [HttpGet]
         [Authorize]
-        public ViewResult Edit(int id)
+        public ViewResult Edit(string id)
         {
-            Employee Employee = _employeeRepository.GetEmployee(id);
+            //unprotect encrypted Id
+            int decryptedId = Convert.ToInt32(protector.Unprotect(id));
+            Employee Employee = _employeeRepository.GetEmployee(decryptedId);
+
+            //string encryptedId2 = protector.Protect(Employee.encryptedId.ToString());
 
             EmployeeEditViewModel editViewModel = new EmployeeEditViewModel()
             {
-                Id = Employee.Id,
+                //Id = Employee.Id,
                 Name = Employee.Name,
                 Email = Employee.Email,
                 Department = Employee.Department,
-                ExistingPhotoPath = Employee.PhotoPath
+                ExistingPhotoPath = Employee.PhotoPath,
+                //protect Id
+                encryptedId =  id
             };
             ViewBag.Title = $"Edit";
             return View(editViewModel);
@@ -114,7 +135,10 @@ namespace EmployeeManagement2.Controllers
 
             //if (ModelState.IsValid)
             //{
-            Employee Employee = _employeeRepository.GetEmployee(model.Id);
+            //decrypt encrypted id
+            int Id = Convert.ToInt32(protector.Unprotect(model.encryptedId));
+
+            Employee Employee = _employeeRepository.GetEmployee(Id);
             Employee.Name = model.Name;
             Employee.Email = model.Email;
             Employee.Department = model.Department;
@@ -127,13 +151,14 @@ namespace EmployeeManagement2.Controllers
                     //lets get the path of existing photopath for deleting
                     var filePath = Path.Combine(hostingEnvironment.WebRootPath,
                         "images", model.ExistingPhotoPath);
+                    //delet using filepath
                     System.IO.File.Delete(filePath);
 
                 }
                 uniqueFileName = ProcessUploadedFiles(model, uniqueFileName);
                 Employee.PhotoPath = uniqueFileName;
             }
-
+            //else if model.photos is null
             _employeeRepository.Update(Employee);
             return RedirectToAction("index");
             //}
