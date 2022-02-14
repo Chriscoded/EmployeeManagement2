@@ -2,7 +2,7 @@
 
 namespace EmployeeManagement2.ViewModel
 {
-    public class ChangePasswordVieModel
+    public class ChangePasswordViewModel
     {
         [Required]
         [DataType(DataType.Password)]
@@ -17,7 +17,7 @@ namespace EmployeeManagement2.ViewModel
         public string NewPassword { get; set; }
         [DataType(DataType.Password)]
         [Display(Name = "Confirm Password")]
-        [Compare("Password", ErrorMessage = "The Password and Confirm Password did not match")]
+        [Compare("NewPassword", ErrorMessage = "The Password and Confirm Password did not match")]
         public string ConfirmPassword { get; set; }
     }
 }

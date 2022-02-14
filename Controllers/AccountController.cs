@@ -1,6 +1,7 @@
 ﻿
 using EmployeeManagement2.Models;
 using EmployeeManagement2.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,7 +21,87 @@ namespace EmployeeManagement2.Controllers
             signInManager = SignInManager;
             this.logger = logger;
         }
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> AddPassword()
+        {
+            var user = await userManager.GetUserAsync(User);
+            var userHasPassword = await userManager.HasPasswordAsync(user);
 
+            if (userHasPassword)
+            {
+                return RedirectToAction("ChangePassword");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> AddPassword(AddPasswordViewModel Model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.GetUserAsync(User);
+                var result = await userManager.AddPasswordAsync(user, Model.NewPassword);
+                if (!result.Succeeded)
+                {
+                    foreach(var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);  
+                    }
+                    return View();
+                }
+                signInManager.RefreshSignInAsync(user);
+                ViewBag.SuccessTitle = $"Password Added successfully";
+                ViewBag.SuccessMessage = $"You can now choose to login internally or externally";
+                return View("Success");
+            }
+            return View(Model);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword()
+        {
+            var user = await userManager.GetUserAsync(User);
+            var userHasPassword = await userManager.HasPasswordAsync(user);
+
+            if (!userHasPassword)
+            {
+                return RedirectToAction("AddPassword");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel Model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.GetUserAsync(User); 
+                
+                if(user == null)
+                {
+                    return Redirect("Login");
+                }
+
+                var result = await userManager.ChangePasswordAsync(user, Model.CurrentPassword,Model.NewPassword);
+                if (!result.Succeeded)
+                {
+                    foreach(var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return View();    
+                }
+                signInManager.RefreshSignInAsync(user);
+                ViewBag.SuccessTitle = $"Successful change of Password";
+                ViewBag.SuccessMessage = $"You have successfully changed your password";
+                return View("Success");
+            }
+            return View(Model); 
+        }
         [HttpGet]
         public IActionResult ResetPassword(string Email, string token)
         {
@@ -43,6 +124,11 @@ namespace EmployeeManagement2.Controllers
                     var result = await userManager.ResetPasswordAsync(user, Model.Token, Model.Password);
                     if (result.Succeeded)
                     {
+                        //if user is locked out because we have reset password unlock the user
+                        if(await userManager.IsLockedOutAsync(user))
+                        {
+                            await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
+                        }
                         return View("ResetPasswordConfirmation");
                     }
                     foreach(var error in result.Errors)
@@ -56,7 +142,7 @@ namespace EmployeeManagement2.Controllers
             return View(Model);
         }
 
-            [HttpGet]
+        [HttpGet]
         public IActionResult ForgotPassword()
         {
             return View();
@@ -150,8 +236,8 @@ namespace EmployeeManagement2.Controllers
                         return RedirectToAction("ListUsers", "Administration");
                     }
 
-                    ViewBag.ErrorTitle = $"Registration successful";
-                    ViewBag.ErrorMessage = $"Before you can login please confirm your Email," +
+                    ViewBag.SuccessTitle = $"Registration successful";
+                    ViewBag.SuccessMessage = $"Before you can login please confirm your Email," +
                         "By clicking on the confirmation link that we have emailed you";
                     return View("Success");
                 }
@@ -212,7 +298,7 @@ namespace EmployeeManagement2.Controllers
                     ModelState.AddModelError(String.Empty, $"Email not varified yet");
                     return View(Model);
                 }
-                var result = await signInManager.PasswordSignInAsync(Model.Email, Model.Password, Model.RememberMe, false);
+                var result = await signInManager.PasswordSignInAsync(Model.Email, Model.Password, Model.RememberMe, true);
 
                 if (result.Succeeded)
                 {
@@ -230,6 +316,10 @@ namespace EmployeeManagement2.Controllers
                         return RedirectToAction("Index", "home");
                     }
 
+                }
+                if (result.IsLockedOut)
+                {
+                    return View("AccountLocked");
                 }
                
                     ModelState.AddModelError(string.Empty, "Invalid Login Attempt");

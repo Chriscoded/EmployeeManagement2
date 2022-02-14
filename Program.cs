@@ -24,6 +24,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
     //change email confirmation Token provider from default to custom
     options.Tokens.EmailConfirmationTokenProvider = "CustomConfirmation";
+    options.Lockout.MaxFailedAccessAttempts = 5;    
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 }).AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders()
 //add custom email token provider
