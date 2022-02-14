@@ -51,7 +51,7 @@ namespace EmployeeManagement2.Controllers
                     }
                     return View();
                 }
-                signInManager.RefreshSignInAsync(user);
+                await signInManager.RefreshSignInAsync(user);
                 ViewBag.SuccessTitle = $"Password Added successfully";
                 ViewBag.SuccessMessage = $"You can now choose to login internally or externally";
                 return View("Success");
@@ -95,7 +95,7 @@ namespace EmployeeManagement2.Controllers
                     }
                     return View();    
                 }
-                signInManager.RefreshSignInAsync(user);
+                await signInManager.RefreshSignInAsync(user);
                 ViewBag.SuccessTitle = $"Successful change of Password";
                 ViewBag.SuccessMessage = $"You have successfully changed your password";
                 return View("Success");
