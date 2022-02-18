@@ -41,7 +41,7 @@ namespace EmployeeManagement2.Services
                 using (var client = new SmtpClient())
                 {
                     client.Connect(SmtpServer, SmtpPortNumber, true);
-                    client.Authenticate("amaemechris@gmail.com", "{Password}"
+                    client.Authenticate("amaemechris@gmail.com", "Password"
                         );
                     await client.SendAsync(mimeMessage);
                     await client.DisconnectAsync(true);
