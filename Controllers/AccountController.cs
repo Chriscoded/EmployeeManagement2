@@ -193,42 +193,28 @@ namespace EmployeeManagement2.Controllers
 
                     //sending email using gmail smtp
                     //******************** sending email using gmail smtp ********************//
-                    using (var client = new SmtpClient())
-                    {
-                        client.Connect("smtp.gmail.com", 465, true);
-                        client.Authenticate("amaemechris@gmail.com", "{Password}");
+                    //using (var client = new SmtpClient())
+                    //{
+                    //    client.Connect("smtp.gmail.com", 465, true);
+                    //    client.Authenticate("amaemechris@gmail.com", "{Password}");
                         var bodyBuilder = new BodyBuilder();
                         using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
                         {
                             bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
                         }
-                        //{0} : Website link 
-                        //{1} : Email  
-                        //{2} : Password reset link
-                        //{3} : Date and Time 
-                        //{4} : Subject
-
-                        //string.Format uses double {{}} for value placeholder instead of single {}
-                        //Instead of taking the pain to replacing it in the template lets do it here
+                       
                         string htmlbody = bodyBuilder.HtmlBody
                             .Replace("{{WebsitLink}}", website_link)
                             .Replace("{{email}}", Model.Email)
                             .Replace("{{ResetLink}}", passwordResetLink)
                             .Replace("{{DateTime}}", String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now))
                             .Replace("{{subject}}", subject);
-                        //string messageBody = string.Format(htmlbody,
-                        //website_link,
-                        //Model.Email,
-                        //passwordResetLink,
-                        //String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now),
-                        //subject
-                        //);
 
                         var result = await emailSender.SendEmailAsync(Model.Email, subject, htmlbody);
                         if (result == true) { 
                             logger.LogInformation(3, $"User with email {Model.Email} got email reset link");
                         }
-                    }
+                    //}
                     //******************** end of sending email using smtp ********************//
                     return View("ForgotPasswordConfirmation");
                 }
@@ -296,11 +282,50 @@ namespace EmployeeManagement2.Controllers
 
                     logger.Log(LogLevel.Warning, confirmationLink);
 
-                    //if user is admin adding new user that is the admin is logged in redirect to listuser action in account countroller
-                    if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
-                    {
-                        return RedirectToAction("ListUsers", "Administration");
-                    }
+                    string Message = "Please confirm your password by clicking <a href=\"" + confirmationLink + "\">here</a>";
+                    // string body;  
+
+                    var webRoot = env.WebRootPath; //get wwwroot Folder  
+
+                    //Get TemplateFile located at wwwroot/Templates/EmailTemplate/ConfirmEmail.html  
+                    var pathToFile = env.WebRootPath
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "Templates"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "EmailTemplate"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "ConfirmEmail.html";
+
+                    var subject = "Confirm Your Email";
+                    var website_link = "https://localhost:44349/";
+
+                    //sending email using gmail smtp
+                    //******************** sending email using gmail smtp ********************//
+                    
+                        var bodyBuilder = new BodyBuilder();
+                        using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
+                        {
+                            bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
+                        }
+
+                        string htmlbody = bodyBuilder.HtmlBody
+                            .Replace("{{WebsitLink}}", website_link)
+                            .Replace("{{email}}", Model.Email)
+                            .Replace("{{ConfirmEmailLink}}", confirmationLink)
+                            .Replace("{{DateTime}}", String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now))
+                            .Replace("{{subject}}", subject);
+
+                        var Emailresult = await emailSender.SendEmailAsync(Model.Email, subject, htmlbody);
+                        if (Emailresult == true)
+                        {
+                            logger.LogInformation(3, $"User with email {Model.Email} Just received email varification mail");
+                        }
+
+                        //if user is admin adding new user that is the admin is logged in redirect to listuser action in account countroller
+                        if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                        {
+                            return RedirectToAction("ListUsers", "Administration");
+                        }
 
                     ViewBag.SuccessTitle = $"Registration successful";
                     ViewBag.SuccessMessage = $"Before you can login please confirm your Email," +
@@ -509,6 +534,46 @@ namespace EmployeeManagement2.Controllers
                             new { userId = user.Id, token = token }, Request.Scheme);
 
                         logger.Log(LogLevel.Warning, confirmationLink);
+
+                        string Message = "Please confirm your Email by clicking <a href=\"" + confirmationLink + "\">here</a>";
+                        // string body;  
+
+                        var webRoot = env.WebRootPath; //get wwwroot Folder  
+
+                        //Get TemplateFile located at wwwroot/Templates/EmailTemplate/ConfirmEmail.html  
+                        var pathToFile = env.WebRootPath
+                                + Path.DirectorySeparatorChar.ToString()
+                                + "Templates"
+                                + Path.DirectorySeparatorChar.ToString()
+                                + "EmailTemplate"
+                                + Path.DirectorySeparatorChar.ToString()
+                                + "ConfirmEmail.html";
+
+                        var subject = "Confirm Your Email";
+                        var website_link = "https://localhost:44349/";
+
+                        //sending email using gmail smtp
+                        //******************** sending email using gmail smtp ********************//
+
+                        var bodyBuilder = new BodyBuilder();
+                        using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
+                        {
+                            bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
+                        }
+
+                        string htmlbody = bodyBuilder.HtmlBody
+                            .Replace("{{WebsitLink}}", website_link)
+                            .Replace("{{email}}", Email)
+                            .Replace("{{ConfirmEmailLink}}", confirmationLink)
+                            .Replace("{{DateTime}}", String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now))
+                            .Replace("{{subject}}", subject);
+
+                        var Emailresult = await emailSender.SendEmailAsync(Email, subject, htmlbody);
+                        if (Emailresult == true)
+                        {
+                            logger.LogInformation(3, $"User with email {Email} Just received email varification mail");
+                        }
+
 
                         ViewBag.SuccessTitle = "Registration successful";
                         ViewBag.SuccessMessage = "Before you can login please confirm your Email," +

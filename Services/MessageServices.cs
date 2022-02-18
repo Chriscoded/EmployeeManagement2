@@ -11,7 +11,7 @@ namespace EmployeeManagement2.Services
             {
                 //From Address    
                 string FromAddress = "amaemechris@gmail.com";
-                string FromAdressTitle = "My Site";
+                string FromAdressTitle = "Employee Management";
                 //To Address    
                 string ToAddress = email;
                 string ToAdressTitle = email;

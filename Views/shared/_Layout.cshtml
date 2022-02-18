@@ -31,7 +31,22 @@
         
     </environment>
     <link href="~/css/Site.css" rel="stylesheet" asp-append-version="true"/>
-    <title>@ViewBag.Title</title>
+    @{
+            
+            if (ViewBag.Title == null)
+            {
+                <title>
+                    Employee Management System
+                </title>
+            }
+            else
+            {
+                <title>
+                    @ViewBag.Title
+                </title>  
+            }
+            
+        }
 </head>
 
 <body>
