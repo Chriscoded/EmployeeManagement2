@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using MailKit.Net.Smtp;
+using MimeKit;
+using EmployeeManagement2.Services;
 
 namespace EmployeeManagement2.Controllers
 {
@@ -13,13 +16,19 @@ namespace EmployeeManagement2.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly ILogger<AccountController> logger;
+        private readonly IEmailSender emailSender;
+        private readonly ISmsSender smsSender;
+        private readonly IWebHostEnvironment env;
 
         public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger, IEmailSender emailSender, ISmsSender smsSender, IWebHostEnvironment env)
         {
             this.userManager = userManager;
             signInManager = SignInManager;
             this.logger = logger;
+            this.emailSender = emailSender;
+            this.smsSender = smsSender;
+            this.env = env;
         }
         [HttpGet]
         [Authorize]
@@ -45,9 +54,9 @@ namespace EmployeeManagement2.Controllers
                 var result = await userManager.AddPasswordAsync(user, Model.NewPassword);
                 if (!result.Succeeded)
                 {
-                    foreach(var error in result.Errors)
+                    foreach (var error in result.Errors)
                     {
-                        ModelState.AddModelError(string.Empty, error.Description);  
+                        ModelState.AddModelError(string.Empty, error.Description);
                     }
                     return View();
                 }
@@ -79,33 +88,33 @@ namespace EmployeeManagement2.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await userManager.GetUserAsync(User); 
-                
-                if(user == null)
+                var user = await userManager.GetUserAsync(User);
+
+                if (user == null)
                 {
                     return Redirect("Login");
                 }
 
-                var result = await userManager.ChangePasswordAsync(user, Model.CurrentPassword,Model.NewPassword);
+                var result = await userManager.ChangePasswordAsync(user, Model.CurrentPassword, Model.NewPassword);
                 if (!result.Succeeded)
                 {
-                    foreach(var error in result.Errors)
+                    foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
-                    return View();    
+                    return View();
                 }
                 await signInManager.RefreshSignInAsync(user);
                 ViewBag.SuccessTitle = $"Successful change of Password";
                 ViewBag.SuccessMessage = $"You have successfully changed your password";
                 return View("Success");
             }
-            return View(Model); 
+            return View(Model);
         }
         [HttpGet]
         public IActionResult ResetPassword(string Email, string token)
         {
-            if(Email == null || token == null)
+            if (Email == null || token == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid Password reset token");
             }
@@ -119,19 +128,19 @@ namespace EmployeeManagement2.Controllers
             {
                 var user = await userManager.FindByEmailAsync(Model.Email);
 
-                if(user != null)
+                if (user != null)
                 {
                     var result = await userManager.ResetPasswordAsync(user, Model.Token, Model.Password);
                     if (result.Succeeded)
                     {
                         //if user is locked out because we have reset password unlock the user
-                        if(await userManager.IsLockedOutAsync(user))
+                        if (await userManager.IsLockedOutAsync(user))
                         {
                             await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
                         }
                         return View("ResetPasswordConfirmation");
                     }
-                    foreach(var error in result.Errors)
+                    foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
@@ -155,15 +164,72 @@ namespace EmployeeManagement2.Controllers
             //if input passed all necessary validatio 
             if (ModelState.IsValid)
             {
-                user = await userManager.FindByEmailAsync(Model.Email); 
-                
-                if(user != null && await userManager.IsEmailConfirmedAsync(user))
+                user = await userManager.FindByEmailAsync(Model.Email);
+
+                if (user != null && await userManager.IsEmailConfirmedAsync(user))
                 {
                     var token = await userManager.GeneratePasswordResetTokenAsync(user);
                     var passwordResetLink = Url.Action("ResetPassword", "Account", new
-                    { email = Model.Email, token = token}, Request.Scheme);
+                    { email = Model.Email, token = token }, Request.Scheme);
 
                     logger.Log(LogLevel.Warning, passwordResetLink);
+
+                    string Message = "Please Reset your password by clicking <a href=\"" + passwordResetLink + "\">here</a>";
+                    // string body;  
+
+                    var webRoot = env.WebRootPath; //get wwwroot Folder  
+
+                    //Get TemplateFile located at wwwroot/Templates/EmailTemplate/ForgotPassword.html  
+                    var pathToFile = env.WebRootPath
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "Templates"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "EmailTemplate"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "ForgotPassword.html";
+
+                    var subject = "Reset Your Password";
+                    var website_link = "https://localhost:44349/";
+
+                    //sending email using gmail smtp
+                    //******************** sending email using gmail smtp ********************//
+                    using (var client = new SmtpClient())
+                    {
+                        client.Connect("smtp.gmail.com", 465, true);
+                        client.Authenticate("amaemechris@gmail.com", "{Password}");
+                        var bodyBuilder = new BodyBuilder();
+                        using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
+                        {
+                            bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
+                        }
+                        //{0} : Website link 
+                        //{1} : Email  
+                        //{2} : Password reset link
+                        //{3} : Date and Time 
+                        //{4} : Subject
+
+                        //string.Format uses double {{}} for value placeholder instead of single {}
+                        //Instead of taking the pain to replacing it in the template lets do it here
+                        string htmlbody = bodyBuilder.HtmlBody
+                            .Replace("{{WebsitLink}}", website_link)
+                            .Replace("{{email}}", Model.Email)
+                            .Replace("{{ResetLink}}", passwordResetLink)
+                            .Replace("{{DateTime}}", String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now))
+                            .Replace("{{subject}}", subject);
+                        //string messageBody = string.Format(htmlbody,
+                        //website_link,
+                        //Model.Email,
+                        //passwordResetLink,
+                        //String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now),
+                        //subject
+                        //);
+
+                        var result = await emailSender.SendEmailAsync(Model.Email, subject, htmlbody);
+                        if (result == true) { 
+                            logger.LogInformation(3, $"User with email {Model.Email} got email reset link");
+                        }
+                    }
+                    //******************** end of sending email using smtp ********************//
                     return View("ForgotPasswordConfirmation");
                 }
                 //when the user is not in our system lets not let them
@@ -302,7 +368,29 @@ namespace EmployeeManagement2.Controllers
 
                 if (result.Succeeded)
                 {
-                    
+                    //sending email using gmail smtp
+                    //******************** sending email using gmail smtp ********************//
+                    using (var client = new SmtpClient())
+                    {
+                        client.Connect("smtp.gmail.com", 465, true);
+                        client.Authenticate("amaemechris@gmail.com", "{Password}");
+                        var bodyBuilder = new BodyBuilder
+                        {
+                            HtmlBody = $"<h3> {Model.Email} Login Success</h3><p> Someone Logged in to your Employee Management account</p>",
+                            TextBody = "<p> Someone Logged in to your Employee Management account</p>"
+                        };
+                        var message = new MimeMessage
+                        {
+                            Body = bodyBuilder.ToMessageBody()
+                        };
+                        message.From.Add(new MailboxAddress("Noreply my Site", "amaemechris@gmail.com"));
+                        message.To.Add(new MailboxAddress("Testing", Model.Email));
+                        message.Subject = "Login Success";
+                        client.Send(message);
+
+                        client.Disconnect(true);
+                    }
+                    //******************** end of sending email using smtp ********************//
                     //if any return url
                     if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
                     {

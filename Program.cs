@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using NLog.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication;
+using EmployeeManagement2.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -75,6 +76,8 @@ builder.Services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
 builder.Services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
 builder.Services.AddSingleton<DataProtectionPurposeStrings>();
+builder.Services.AddTransient<IEmailSender, MessageServices>();
+builder.Services.AddTransient<ISmsSender, MessageServices>();
 //builder.Services.AddHttpContextAccessor();
 //builder.Services.AddRazorPages();
 
