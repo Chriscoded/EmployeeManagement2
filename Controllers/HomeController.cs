@@ -1,5 +1,6 @@
 ﻿using EmployeeManagement2.Models;
 using EmployeeManagement2.Security;
+using EmployeeManagement2.Services;
 using EmployeeManagement2.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -14,15 +15,17 @@ namespace EmployeeManagement2.Controllers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IWebHostEnvironment hostingEnvironment;
         private readonly ILogger logger;
+        private readonly ISmsSender smsSender;
         private readonly IDataProtector protector;
 
         public HomeController(IEmployeeRepository employeeRepository, IWebHostEnvironment hostingEnvironment, 
             ILogger<HomeController> logger, IDataProtectionProvider dataProtectionProvider, 
-            DataProtectionPurposeStrings dataProtectionPurposeStrings)
+            DataProtectionPurposeStrings dataProtectionPurposeStrings, ISmsSender SmsSender)
         { 
             _employeeRepository = employeeRepository;
             this.hostingEnvironment = hostingEnvironment;
             this.logger = logger;
+            smsSender = SmsSender;
             protector = dataProtectionProvider.CreateProtector(dataProtectionPurposeStrings.EmployeeIdRouteValue);
 
 
@@ -37,6 +40,7 @@ namespace EmployeeManagement2.Controllers
                     e.encryptedId = protector.Protect(e.Id.ToString());
                     return e;
                 });
+
             return View(model);
         }
         public ViewResult Details(string? id)

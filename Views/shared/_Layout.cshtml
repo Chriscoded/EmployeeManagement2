@@ -11,6 +11,9 @@
         <script src="~/lib/jquery-validate/jquery.validate.js"></script>
         <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
         <script src="~/lib/bootstrap/js/bootstrap.js" ></script>
+         <script src="https://cdn.ckeditor.com/4.17.2/standard-all/ckeditor.js"></script>
+      
+
     </environment>
 
     <environment exclude="Development">
@@ -28,6 +31,9 @@
         <script src="~/lib/jquery-validate/jquery.validate.js"></script>
         <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
         <script src="~/lib/bootstrap/js/bootstrap.js" ></script>
+        <script src="https://cdn.ckeditor.com/4.17.2/standard-all/ckeditor.js"></script>
+
+
         
     </environment>
     <link href="~/css/Site.css" rel="stylesheet" asp-append-version="true"/>
@@ -81,15 +87,32 @@
                         </li>
                         @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Admin")) || (User.IsInRole("Super Admin")))
                         {
-                            <li class="nav-item dropdown">
-                          <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item dropdown">
+                          <a class="nav-link dropdown-toggle" href="#dropdownExample" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Manage
                           </a>
-                          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink" id="dropdownExample">
                             <li><a asp-action="ListRoles" asp-controller="Administration" class="dropdown-item" >Manage Roles</a></li>
                             <li><a asp-action="ListUsers" asp-controller="Administration" class="dropdown-item">Manage Users</a></li>
                             <li><a asp-action="ChangePassword" asp-controller="Account" class="dropdown-item">Password</a></li>
-                          </ul>
+                                <li class="nav-item dropdown">
+                                     <a class="nav-link dropdown-toggle" href="#dropdownExample2" id="navbarDarkDropdownMenuLink2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Newsletter
+                                      </a>
+                                      <ul class="dropdown-menu" id="dropdownExample2" aria-labelledby="navbarDarkDropdownMenuLink2">
+                                        <li><a asp-action="Newsletter" asp-controller="Administration" class="dropdown-item">Newsletter</a></li>
+                                      </ul>
+                                </li>
+                             </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#dropdownExample2" id="navbarDarkDropdownMenuLink2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Newsletter
+                            </a>
+                            <ul class="dropdown-menu" id="dropdownExample2" aria-labelledby="navbarDarkDropdownMenuLink2">
+                            <li><a asp-action="SendSms" asp-controller="Administration" class="dropdown-item">Send Sms</a></li>
+                            <li><a asp-action="SendEmail" asp-controller="Administration" class="dropdown-item">Send Email</a></li>
+                            </ul>
                         </li>
                        
                         }
@@ -127,6 +150,7 @@
                 @RenderSection("Scripts", required: true)
 
             }
+
         }
     </div>
 </body>

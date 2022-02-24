@@ -2,6 +2,6 @@
 {
     public interface ISmsSender
     {
-        public Task SendSmsAsync(string number, string message);
+        public Task<bool> SendSmsAsync(string number, string message);
     }
 }

@@ -72,6 +72,7 @@ builder.Services.Configure<CustomEmailConfirmationTokenProviderOptions>(o => o.T
 
 builder.Services.AddOptions();
 builder.Services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
+builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();

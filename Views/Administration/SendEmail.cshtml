@@ -1,0 +1,32 @@
+﻿@model NewsletterViewModel
+
+@{
+    ViewBag.Title = "Send Newsletter using Email";
+}
+<div class = "row">
+    <div class="col-md-12">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <h1>Send Email Newsletter</h1
+            <div class="form-group m-3">
+                <label asp-for="Subject"></label>
+                <input asp-for="Subject" class="form-control" />
+                <span asp-validation-for="Subject" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Newsletter"></label>
+                <textarea cols="80" id="editor2" asp-for="Newsletter" rows="10">
+                
+                </textarea>
+                <span asp-validation-for="Newsletter" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary m-3" style="width:auto">Send Email</button>
+        </form>
+    </div>
+</div>
+    @section Scripts {
+        <script>
+            CKEDITOR.replace( 'editor2' );
+    </script>
+    }

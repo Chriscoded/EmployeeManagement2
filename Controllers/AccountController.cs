@@ -160,10 +160,14 @@ namespace EmployeeManagement2.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel Model)
         {
+            await smsSender.SendSmsAsync("+2348102945873", "message");
             ApplicationUser user = null;
             //if input passed all necessary validatio 
             if (ModelState.IsValid)
             {
+
+               
+
                 user = await userManager.FindByEmailAsync(Model.Email);
 
                 if (user != null && await userManager.IsEmailConfirmedAsync(user))
@@ -395,26 +399,49 @@ namespace EmployeeManagement2.Controllers
                 {
                     //sending email using gmail smtp
                     //******************** sending email using gmail smtp ********************//
-                    using (var client = new SmtpClient())
-                    {
-                        client.Connect("smtp.gmail.com", 465, true);
-                        client.Authenticate("amaemechris@gmail.com", "{Password}");
-                        var bodyBuilder = new BodyBuilder
-                        {
-                            HtmlBody = $"<h3> {Model.Email} Login Success</h3><p> Someone Logged in to your Employee Management account</p>",
-                            TextBody = "<p> Someone Logged in to your Employee Management account</p>"
-                        };
-                        var message = new MimeMessage
-                        {
-                            Body = bodyBuilder.ToMessageBody()
-                        };
-                        message.From.Add(new MailboxAddress("Noreply my Site", "amaemechris@gmail.com"));
-                        message.To.Add(new MailboxAddress("Testing", Model.Email));
-                        message.Subject = "Login Success";
-                        client.Send(message);
 
-                        client.Disconnect(true);
+                    string Message = "This email is to notify you that someone just logged in to your employment management system account. " +
+                        "Please if you are not the one please do well to do change of password before he does.</a>";
+                    // string body;  
+
+                    var webRoot = env.WebRootPath; //get wwwroot Folder  
+
+                    //Get TemplateFile located at wwwroot/Templates/EmailTemplate/ConfirmEmail.html  
+                    var pathToFile = env.WebRootPath
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "Templates"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "EmailTemplate"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "someonelogged.html";
+
+                    var subject = "Someone logged in";
+                    var website_link = "https://localhost:44349/";
+
+
+                    //sending email using gmail smtp
+                    //******************** sending email using gmail smtp ********************//
+
+                    var bodyBuilder = new BodyBuilder();
+                    using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
+                    {
+                        bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
                     }
+
+                    string htmlbody = bodyBuilder.HtmlBody
+                        .Replace("{{website_link}}", website_link)
+                        .Replace("{{email}}", Model.Email)
+                        .Replace("{{Message}}", Message)
+                        .Replace("{{DateTime}}", String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now))
+                        .Replace("{{subject}}", subject);
+
+                    var Emailresult = await emailSender.SendEmailAsync(Model.Email, subject, htmlbody);
+                    if (Emailresult == true)
+                    {
+                        logger.LogInformation(3, $"User with email {Model.Email} Just Logged in at {String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now)}");
+                    }
+
+
                     //******************** end of sending email using smtp ********************//
                     //if any return url
                     if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))

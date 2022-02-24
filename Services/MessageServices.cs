@@ -1,10 +1,20 @@
 ﻿using MailKit.Net.Smtp;
 using MimeKit;
 using MailKit.Security;
+using Vonage;
+using Vonage.Request;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+
 namespace EmployeeManagement2.Services
 {
     public class MessageServices : IEmailSender, ISmsSender
     {
+       
+
+        public SMSoptions Options { get; } // set only via Secret Manager
+        public IWebHostEnvironment Env { get; }
+
         public async Task<bool> SendEmailAsync(string email, string subject, string message)
         {
             try
@@ -41,7 +51,7 @@ namespace EmployeeManagement2.Services
                 using (var client = new SmtpClient())
                 {
                     client.Connect(SmtpServer, SmtpPortNumber, true);
-                    client.Authenticate("amaemechris@gmail.com", ""
+                    client.Authenticate("amaemechris@gmail.com", "Password"
                         );
                     await client.SendAsync(mimeMessage);
                     await client.DisconnectAsync(true);
@@ -58,9 +68,24 @@ namespace EmployeeManagement2.Services
             
         }
 
-        public async Task SendSmsAsync(string number, string message)
+        public async Task<bool> SendSmsAsync(string number, string message)
         {
-            throw new NotImplementedException();
+
+            var credentials = Credentials.FromApiKeyAndSecret(
+            "e69c356a",
+            "Fgy2TO5Y1tXoGAd3"
+            );
+
+            var VonageClient = new VonageClient(credentials);
+
+            var response = VonageClient.SmsClient.SendAnSms(new Vonage.Messaging.SendSmsRequest()
+            {
+                To = number,
+                From = "Chris",
+                Text = message
+            });
+
+            return true;
         }
     }
 }

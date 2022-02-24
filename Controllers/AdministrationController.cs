@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Collections.Generic;
+using EmployeeManagement2.Services;
+using MailKit.Net.Smtp;
+using MimeKit;
+
 
 namespace EmployeeManagement2.Controllers
 {
@@ -16,14 +20,104 @@ namespace EmployeeManagement2.Controllers
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly UserManager<ApplicationUser> userManager;
         private readonly ILogger<AdministrationController> logger;
+        private readonly ISmsSender smsSender;
+        private readonly IEmailSender emailSender;
+        private readonly IWebHostEnvironment env;
+        private readonly IApplicationUserRepository applicationUserRepository;
 
         public AdministrationController(RoleManager<IdentityRole> roleManager,
-            UserManager<ApplicationUser> userManager, ILogger<AdministrationController> logger)
+            UserManager<ApplicationUser> userManager, ILogger<AdministrationController> logger, ISmsSender smsSender, 
+            IEmailSender emailSender, IWebHostEnvironment env, IApplicationUserRepository applicationUserRepository)
         {
             this.roleManager = roleManager;
             this.userManager = userManager;
             this.logger = logger;
+            this.smsSender = smsSender;
+            this.emailSender = emailSender;
+            this.env = env;
+            this.applicationUserRepository = applicationUserRepository;
         }
+
+        //swend news letter using SMS
+        [HttpGet]
+        public ViewResult SendSms()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendSms(NewsletterViewModel Model)
+        {
+            if (ModelState.IsValid)
+            {
+                if(await smsSender.SendSmsAsync("+2348102945873", Model.Newsletter) == true)
+                {
+                    ViewBag.SuccessTitle = $"Newsletter sent successfully";
+                    ViewBag.SuccessMessage = $"You have successfully sent your message";
+                    return View("Success");
+                }
+                return View();
+            }
+            return View();
+        }
+
+        //send newsletter with email
+        [HttpGet]
+        public ViewResult SendEmail()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendEmail(NewsletterViewModel Model)
+        {
+            if (ModelState.IsValid)
+            {
+
+                string Message = Model.Newsletter;
+                // string body;  
+
+                var webRoot = env.WebRootPath; //get wwwroot Folder  
+
+                //Get TemplateFile located at wwwroot/Templates/EmailTemplate/ForgotPassword.html  
+                var pathToFile = env.WebRootPath
+                        + Path.DirectorySeparatorChar.ToString()
+                        + "Templates"
+                        + Path.DirectorySeparatorChar.ToString()
+                        + "EmailTemplate"
+                        + Path.DirectorySeparatorChar.ToString()
+                        + "Newsletter.html";
+
+                var subject = Model.Subject;
+                var website_link = "https://localhost:44349/";
+
+                var bodyBuilder = new BodyBuilder();
+                using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
+                {
+                    bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
+                }
+
+                string htmlbody = bodyBuilder.HtmlBody
+                    .Replace("{{website_link}}", website_link)
+                    .Replace("{{Message}}", Message)
+                    .Replace("{{DateTime}}", String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now))
+                    .Replace("{{subject}}", subject);
+
+                var model = applicationUserRepository.GetAllUsers();
+                foreach(var Mode in model)
+                {
+                    var Emailresult = await emailSender.SendEmailAsync(Mode.Email, subject, htmlbody);
+                }
+               
+                    ViewBag.SuccessTitle = $"Newsletter sent successfully";
+                    ViewBag.SuccessMessage = $"You have successfully sent your message";
+                    return View("Success");
+                
+            }
+            return View();
+        }
+
+        
         [HttpGet]
         public IActionResult ListUsers()
         {
