@@ -1,4 +1,4 @@
-﻿@if (ViewBag.ErrorTitle == null)
+﻿@if (ViewData["ErrorTitle"] == null)
 {
     <h3>
         An error occured while processing your request, support team has been notified we're working tirellessly to fix it
@@ -10,8 +10,8 @@
 else
 {
     <div class="alert alert-success text-align-content-center  mt-5"> 
-        <h1 class="text-danger">@ViewBag.ErrorTitle</h1>
-        <h6 class="text-danger">@ViewBag.ErrorMessage</h6>
+        <h1 class="text-danger">@ViewData["ErrorTitle"]</h1>
+        <h6 class="text-danger">@ViewData["ErrorMessage"]</h6>
     </div>
 }
 <hr/>

@@ -104,14 +104,26 @@ namespace EmployeeManagement2.Controllers
                     .Replace("{{subject}}", subject);
 
                 var model = applicationUserRepository.GetAllUsers();
-                foreach(var Mode in model)
+                var Emailresult = false;
+                foreach (var Mode in model)
                 {
-                    var Emailresult = await emailSender.SendEmailAsync(Mode.Email, subject, htmlbody);
+                    Emailresult = await emailSender.SendEmailAsync(Mode.Email, subject, htmlbody);
                 }
-               
+                if (Emailresult == true) 
+                {
                     ViewBag.SuccessTitle = $"Newsletter sent successfully";
                     ViewBag.SuccessMessage = $"You have successfully sent your message";
                     return View("Success");
+                }
+                if(Emailresult == false)
+                {
+                    if (Emailresult)
+                    {
+                        ViewBag.ErrorTitle = $"Newsletter was not sent";
+                        ViewBag.ErrorMessage = $"You have not sent any message";
+                        return View("Error");
+                    }
+                }
                 
             }
             return View();

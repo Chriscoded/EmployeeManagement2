@@ -17,8 +17,8 @@ namespace EmployeeManagement2.Services
 
         public async Task<bool> SendEmailAsync(string email, string subject, string message)
         {
-            try
-            {
+            //try
+            //{
                 //From Address    
                 string FromAddress = "amaemechris@gmail.com";
                 string FromAdressTitle = "Employee Management";
@@ -58,13 +58,13 @@ namespace EmployeeManagement2.Services
                     return true;
                 }
                 
-            }
-            catch (Exception ex)
-            {
+            //}
+            //catch (Exception ex)
+            //{
                 return false;
                 //throw ex;
                 
-            }
+            //}
             
         }
 

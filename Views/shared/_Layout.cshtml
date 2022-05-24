@@ -39,7 +39,7 @@
     <link href="~/css/Site.css" rel="stylesheet" asp-append-version="true"/>
     @{
             
-            if (ViewBag.Title == null)
+            if (ViewData["Title"] == null)
             {
                 <title>
                     Employee Management System
@@ -48,7 +48,7 @@
             else
             {
                 <title>
-                    @ViewBag.Title
+                    @ViewData["Title"]
                 </title>  
             }
             

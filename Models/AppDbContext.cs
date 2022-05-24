@@ -20,6 +20,7 @@ namespace EmployeeManagement2.Models
         {
             base.OnModelCreating(modelBuilder);
 
+            //if what we're trying to delete has foreign key then restrict
             foreach(var foreignKey in modelBuilder.Model.GetEntityTypes()
                 .SelectMany(e => e.GetForeignKeys()))
             {

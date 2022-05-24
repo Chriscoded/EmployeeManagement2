@@ -1,4 +1,4 @@
-﻿@if (ViewBag.SuccessTitle == null)
+﻿@if (ViewData["SuccessTitle"] == null)
 {
     <h3 class="text-success">
         Your action was processed successfully
@@ -7,8 +7,8 @@
 else
 {
     <div class="alert alert-success text-align-content-center  mt-5"> 
-        <h1 class="text-success">@ViewBag.SuccessTitle</h1>
-        <h6 class="text-success">@ViewBag.SuccessMessage</h6>
+        <h1 class="text-success">@ViewData["SuccessTitle"]</h1>
+        <h6 class="text-success">@ViewData["SuccessTitle"]</h6>
     </div>
 }
 <hr/>
